@@ -2,46 +2,52 @@ const fs = require("fs");
 const express = require("express");
 const app = express();
 
-// Importing products from products.json file
-const userDetails = JSON.parse(
-  fs.readFileSync(`${__dirname}/data/userDetails.json`)
-);
+// Function to read user data from JSON file
+const getUserData = () => {
+  const rawdata = fs.readFileSync(`${__dirname}/data/userDetails.json`);
+  return JSON.parse(rawdata);
+};
 
-//Middlewares
-app.use(express.json());
+// Function to write user data to JSON file
+const writeUserData = (data) => {
+  const stringData = JSON.stringify(data, null, 2);
+  fs.writeFileSync(`${__dirname}/data/userDetails.json`, stringData);
+};
 
-// Write POST endpoint for registering new user
+// Route handler for creating new user
+app.post("/api/v1/details", (req, res) => {
+  // Get user data from request body
+  const { name, mail, number } = req.body;
 
-// GET endpoint for sending the details of users
-app.get("/api/v1/details", (req, res) => {
-  res.status(200).json({
-    status: "Success",
-    message: "Detail of users fetched successfully",
-    data: {
-      userDetails,
-    },
-  });
-});
-
-// GET endpoint for sending the products to client by id
-app.get("/api/v1/userdetails/:id", (req, res) => {
-  let { id } = req.params;
-  id *= 1;
-  const details = userDetails.find((details) => details.id === id);
-  if (!details) {
-    return res.status(404).send({
-      status: "failed",
-      message: "Product not found!",
-    });
-  } else {
-    res.status(200).send({
-      status: "success",
-      message: "Details of users fetched successfully",
-      data: {
-        details,
-      },
+  // Validate user data
+  if (!name || !mail || !number) {
+    return res.status(400).json({
+      status: "Error",
+      message: "Please provide all required fields: name, mail, number",
     });
   }
+
+  // Read existing user data
+  const userData = getUserData();
+
+  // Generate new user ID
+  const newId = userData.length > 0 ? userData[userData.length - 1].id + 1 : 1;
+
+  // Create new user object
+  const newUser = { id: newId, name, mail, number };
+
+  // Add new user to the data array
+  userData.push(newUser);
+
+  // Write updated user data to JSON file
+  writeUserData(userData);
+
+  // Send success response with newly created user
+  return res.status(201).json({
+    status: "Success",
+    message: "User registered successfully",
+    data: { newUser },
+  });
 });
 
 module.exports = app;
