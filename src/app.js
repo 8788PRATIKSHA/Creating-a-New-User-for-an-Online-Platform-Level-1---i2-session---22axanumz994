@@ -50,4 +50,34 @@ app.post("/api/v1/details", (req, res) => {
   });
 });
 
+// Function to test user registration (for development purposes)
+const testUserRegistration = async (userData) => {
+  try {
+    const response = await fetch("/api/v1/details", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+    console.log("Test User Registration Response:");
+    console.log(data);
+
+    if (response.status === 201) {
+      console.log("✅ User registered successfully!");
+    } else {
+      console.error("❌ Error registering user:", data.message);
+    }
+  } catch (error) {
+    console.error("Error during test:", error);
+  }
+};
+
+// Example usage of test function (comment out for production)
+// testUserRegistration({
+//   name: "Test User",
+//   mail: "test@example.com",
+//   number: 1234567890,
+// });
+
 module.exports = app;
